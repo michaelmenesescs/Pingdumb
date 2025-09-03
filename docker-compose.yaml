@@ -1,0 +1,91 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.name=uptime-monitor
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - uptime-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - KIBANA_INDEX_PATTERN_MANAGEMENT_DEFAULT_INDEX_PATTERN=uptime-*
+    depends_on:
+      - elasticsearch
+    networks:
+      - uptime-network
+
+  api:
+    build: ./api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./api:/usr/src/app
+      - /usr/src/app/node_modules
+    working_dir: /usr/src/app
+    environment:
+      - NODE_ENV=development
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - PORT=3000
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev
+    depends_on:
+      - elasticsearch
+    networks:
+      - uptime-network
+
+  frontend:
+    build: 
+      context: ./frontend
+      target: development
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    working_dir: /usr/src/app
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000/api
+      - REACT_APP_KIBANA_URL=http://localhost:5601
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - NODE_ENV=development
+      - REACT_APP_NODE_ENV=development
+    command: npm start
+    depends_on:
+      - api
+    networks:
+      - uptime-network
+
+  monitor:
+    build: ./monitor
+    volumes:
+      - ./monitor:/usr/src/app
+      - /usr/src/app/node_modules
+    working_dir: /usr/src/app
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - CHECK_INTERVAL=60000
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev
+    depends_on:
+      - elasticsearch
+    networks:
+      - uptime-network
+
+volumes:
+  esdata:
+
+networks:
+  uptime-network:
+    driver: bridge
