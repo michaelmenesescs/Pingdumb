@@ -29,6 +29,9 @@ export const sitesAPI = {
     return response;
   },
   delete: (id) => api.delete(`/api/sites/${id}`),
+  getUptimePercentage: (id) => api.get(`/api/sites/uptime-percentage/${id}`),
+  stopAll: () => api.post('/api/sites/stop-all'),
+  startAll: () => api.post('/api/sites/start-all'),
 };
 
 // Checks API

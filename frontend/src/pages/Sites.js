@@ -94,6 +94,32 @@ const Sites = () => {
     }
   };
 
+  const stopAllSites = async () => {
+    if (window.confirm('Are you sure you want to stop monitoring for ALL sites? This will disable monitoring for all sites until manually re-enabled.')) {
+      try {
+        const response = await sitesAPI.stopAll();
+        alert(response.data.message || 'All sites monitoring stopped successfully');
+        loadSites();
+      } catch (error) {
+        console.error('Error stopping all sites:', error);
+        alert('Error stopping all sites: ' + (error.response?.data?.error || error.message));
+      }
+    }
+  };
+
+  const startAllSites = async () => {
+    if (window.confirm('Are you sure you want to start monitoring for ALL inactive sites?')) {
+      try {
+        const response = await sitesAPI.startAll();
+        alert(response.data.message || 'All sites monitoring started successfully');
+        loadSites();
+      } catch (error) {
+        console.error('Error starting all sites:', error);
+        alert('Error starting all sites: ' + (error.response?.data?.error || error.message));
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="page-header">
@@ -108,12 +134,28 @@ const Sites = () => {
       <div className="page-header">
         <h2>Sites</h2>
         <p>Manage your uptime monitoring sites</p>
-        <button 
-          className="btn btn-primary" 
-          onClick={() => setShowForm(true)}
-        >
-          Add New Site
-        </button>
+        <div className="page-header-actions">
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setShowForm(true)}
+          >
+            Add New Site
+          </button>
+          <button 
+            className="btn btn-success" 
+            onClick={() => startAllSites()}
+            title="Start monitoring for all inactive sites"
+          >
+            Start All Monitoring
+          </button>
+          <button 
+            className="btn btn-danger" 
+            onClick={() => stopAllSites()}
+            title="Stop monitoring for all active sites"
+          >
+            Stop All Monitoring
+          </button>
+        </div>
       </div>
 
       {showForm && (

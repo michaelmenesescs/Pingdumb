@@ -628,3 +628,19 @@ code {
   margin-top: -50px; /* Hide more UI elements in dashboard cards */
   height: calc(100% + 100px);
 }
+
+/* Page header button actions */
+.page-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}

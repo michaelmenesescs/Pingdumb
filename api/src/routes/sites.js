@@ -139,4 +139,61 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+
+router.post('/stop-all', async (req, res) => {
+  try {
+    // Update all sites to set isActive: false instead of deleting them
+    const result = await client.updateByQuery({
+      index: 'uptime-sites',
+      body: {
+        script: {
+          source: "ctx._source.isActive = false; ctx._source.updatedAt = params.now",
+          params: {
+            now: new Date().toISOString()
+          }
+        },
+        query: {
+          term: { isActive: true }
+        }
+      }
+    });
+    
+    res.json({ 
+      message: 'All sites monitoring stopped successfully',
+      updated: result.updated
+    });
+  } catch (error) {
+    console.error('Error stopping all sites:', error);
+    res.status(500).json({ error: 'Failed to stop all sites' });
+  }
+});
+
+router.post('/start-all', async (req, res) => {
+  try {
+    // Update all sites to set isActive: true
+    const result = await client.updateByQuery({
+      index: 'uptime-sites',
+      body: {
+        script: {
+          source: "ctx._source.isActive = true; ctx._source.updatedAt = params.now",
+          params: {
+            now: new Date().toISOString()
+          }
+        },
+        query: {
+          term: { isActive: false }
+        }
+      }
+    });
+    
+    res.json({ 
+      message: 'All sites monitoring started successfully',
+      updated: result.updated
+    });
+  } catch (error) {
+    console.error('Error starting all sites:', error);
+    res.status(500).json({ error: 'Failed to start all sites' });
+  }
+});
+
 module.exports = router;

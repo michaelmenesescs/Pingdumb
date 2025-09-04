@@ -5,6 +5,7 @@ import KibanaChart from '../components/KibanaChart';
 const Dashboard = () => {
   const [sites, setSites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [siteStats, setSiteStats] = useState({});
 
   useEffect(() => {
     loadSites();
@@ -16,10 +17,41 @@ const Dashboard = () => {
       const response = await sitesAPI.getAll();
       console.log('Sites data:', response.data);
       setSites(response.data);
+      
+      // Load stats for each site
+      await loadSiteStats(response.data);
     } catch (error) {
       console.error('Error loading sites:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSiteStats = async (sitesData) => {
+    try {
+      const statsPromises = sitesData.map(async (site) => {
+        try {
+          const response = await fetch(`/api/checks/stats/${site.id}`);
+          if (response.ok) {
+            const stats = await response.json();
+            return { siteId: site.id, stats };
+          }
+        } catch (error) {
+          console.error(`Error loading stats for site ${site.id}:`, error);
+        }
+        return { siteId: site.id, stats: null };
+      });
+
+      const statsResults = await Promise.all(statsPromises);
+      const statsMap = {};
+      statsResults.forEach(({ siteId, stats }) => {
+        statsMap[siteId] = stats;
+      });
+      
+      setSiteStats(statsMap);
+      console.log('Site stats loaded:', statsMap);
+    } catch (error) {
+      console.error('Error loading site stats:', error);
     }
   };
 
@@ -54,12 +86,13 @@ const Dashboard = () => {
           <span className="stat-label">Inactive</span>
           <span className="stat-value inactive">{sites.filter(site => !site.isActive).length}</span>
         </div>
-        <div className="stat-item">
-          <span className="stat-label">Uptime</span>
-          <span className="stat-value uptime">
-            {sites.length > 0 ? Math.round((sites.filter(site => site.isActive).length / sites.length) * 100) : 0}%
-          </span>
-        </div>
+                  <div className="stat-item">
+            <span className="stat-label">Avg Uptime</span>
+            <span className="stat-value uptime">
+              {sites.length > 0 && Object.keys(siteStats).length > 0 ? 
+                Math.round(Object.values(siteStats).reduce((sum, stats) => sum + (stats?.uptimePercentage || 0), 0) / Object.keys(siteStats).length) : 0}%
+            </span>
+          </div>
       </div>
 
       {/* Site Cards with Individual Charts */}
@@ -88,6 +121,9 @@ const Dashboard = () => {
                     </span>
                     <span className="check-interval">
                       Every {Math.round(site.checkInterval / 1000)}s
+                    </span>
+                    <span className="uptime-percentage">
+                      Uptime: {siteStats[site.id]?.uptimePercentage?.toFixed(1) || 0}%
                     </span>
                   </div>
                 </div>
