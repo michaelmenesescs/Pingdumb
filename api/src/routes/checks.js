@@ -108,6 +108,47 @@ router.get('/stats/:siteId', async (req, res) => {
   }
 });
 
+// Get checks for a specific site
+router.get('/site/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const { from = 'now-24h', size = 1000 } = req.query;
+
+    const result = await client.search({
+      index: 'uptime-checks',
+      body: {
+        size: parseInt(size),
+        sort: [{ timestamp: { order: 'desc' } }],
+        query: {
+          bool: {
+            must: [
+              { term: { 'siteId.keyword': siteId } },
+              {
+                range: {
+                  timestamp: {
+                    gte: from
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    });
+
+    const checks = result.hits.hits.map(hit => ({
+      id: hit._id,
+      ...hit._source
+    }));
+
+    res.json(checks);
+  } catch (error) {
+    console.error('Error fetching site checks:', error);
+    // Return empty array instead of error to prevent chart failures
+    res.json([]);
+  }
+});
+
 // Get recent checks for a site
 router.get('/recent/:siteId', async (req, res) => {
   try {

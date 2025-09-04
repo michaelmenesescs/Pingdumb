@@ -1,6 +1,6 @@
 # Uptime Monitor - ELK Stack Integration
 
-A Pingdom-like uptime monitoring application built with the ELK stack (Elasticsearch, Logstash, Kibana) and modern web technologies.
+A Pingdom-like uptime monitoring application built with the ELK stack (Elasticsearch, Logstash, Kibana) and modern web technologies using Claude's Sonnet 4 LLM. 
 
 ## Architecture
 

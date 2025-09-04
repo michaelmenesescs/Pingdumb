@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import PropTypes from 'prop-types';
 
 const KibanaChart = ({ 
   siteId, 
@@ -30,17 +31,31 @@ const KibanaChart = ({
       try {
         setLoading(true);
         
-        // First, ensure the data view is created
-        await axios.post('/api/kibana/setup-dataview');
+        console.log('=== KibanaChart Debug ===');
+        console.log('siteId:', siteId);
+        console.log('siteName:', siteName);
+        console.log('siteId type:', typeof siteId);
+        console.log('siteId length:', siteId?.length);
         
-        // Then get the chart URL for this specific site
-        const response = await axios.get(`/api/kibana/chart-url/${siteId}?timeRange=${timeRange}`);
-        
-        if (response.data.success) {
-          setChartUrl(response.data.chartUrl);
-        } else {
-          throw new Error('Failed to get chart URL');
+        if (!siteId || siteId === 'undefined' || siteId === '') {
+          console.error('Invalid siteId:', siteId);
+          setError('Invalid site ID');
+          setLoading(false);
+          return;
         }
+        
+        // Create site-specific filtered URL using correct field name
+        const query = `siteId:"${siteId}"`;
+        const filteredUrl = `${kibanaBaseUrl}/app/discover#/?embed=true&_g=(time:(from:now-${timeRange},to:now))&_a=(index:uptime-checks,query:(language:kuery,query:'${query}'))`;
+        
+        console.log('=== FIXED URL FOR', siteName, '===');
+        console.log('SiteId:', siteId);
+        console.log('Corrected Query:', query);
+        console.log('URL:', filteredUrl);
+        
+        const directUrl = filteredUrl;
+        
+        setChartUrl(directUrl);
         
       } catch (err) {
         console.error('Error setting up Kibana chart:', err);
@@ -94,11 +109,14 @@ const KibanaChart = ({
             width="100%"
             height="100%"
             frameBorder="0"
+            loading="eager"
             style={{
               border: 'none',
               borderRadius: '4px'
             }}
-            sandbox="allow-same-origin allow-scripts allow-forms"
+            allow="fullscreen"
+            onLoad={() => console.log('Iframe loaded successfully')}
+            onError={() => console.error('Iframe failed to load')}
           />
         )}
       </div>
@@ -108,6 +126,23 @@ const KibanaChart = ({
       </div>
     </div>
   );
+};
+
+// PropTypes validation
+KibanaChart.propTypes = {
+  siteId: PropTypes.string.isRequired,
+  siteName: PropTypes.string.isRequired,
+  checkInterval: PropTypes.number,
+  height: PropTypes.number,
+  timeRange: PropTypes.string,
+  chartType: PropTypes.string
+};
+
+KibanaChart.defaultProps = {
+  height: 300,
+  timeRange: '24h',
+  chartType: 'line',
+  checkInterval: 60000
 };
 
 export default KibanaChart;

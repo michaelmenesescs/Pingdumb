@@ -20,6 +20,12 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - KIBANA_INDEX_PATTERN_MANAGEMENT_DEFAULT_INDEX_PATTERN=uptime-*
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=none
+      - XPACK_SECURITY_ENABLED=false
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a7a6311933d3503b89bc2dbc36572c33a6c10925682e591bffcab6911c06786d
+      - SERVER_CORS_ENABLED=true
+      - SERVER_CORS_ALLOWORIGIN=["http://localhost:3001"]
+      - CSP_FRAME_ANCESTORS=["http://localhost:3001"]
     depends_on:
       - elasticsearch
     networks:

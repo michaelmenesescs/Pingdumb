@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { sitesAPI } from '../services/api';
-import KibanaChart from '../components/KibanaChart';
 
 const Sites = () => {
   const [sites, setSites] = useState([]);
@@ -224,17 +223,7 @@ const Sites = () => {
               <p><strong>Created:</strong> {new Date(site.createdAt).toLocaleDateString()}</p>
             </div>
 
-            {/* Embedded Kibana Chart for this specific site */}
-            {site.isActive && (
-              <KibanaChart 
-                siteId={site.id}
-                siteName={site.name}
-                checkInterval={site.checkInterval}
-                height={250}
-                timeRange="24h"
-                chartType="line"
-              />
-            )}
+
           </div>
         ))}
       </div>
@@ -245,37 +234,7 @@ const Sites = () => {
         </div>
       )}
 
-      {/* Embedded Kibana Dashboard for Real-time Monitoring */}
-      <div className="card">
-        <h3>Real-time Monitoring Dashboard</h3>
-        <p>Live uptime data and performance metrics for your sites</p>
-        
-        <div className="iframe-container">
-          <iframe
-            src={`${process.env.REACT_APP_KIBANA_URL}/app/dashboards#/view/uptime-overview`}
-            title="Real-time Uptime Dashboard"
-            allowFullScreen
-            style={{ border: 'none', width: '100%', height: '600px' }}
-          />
-        </div>
-        
-        <div className="dashboard-actions">
-          <a 
-            href={`${process.env.REACT_APP_KIBANA_URL}/app/dashboards`}
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="btn btn-primary"
-          >
-            Open Full Kibana
-          </a>
-          <button 
-            className="btn"
-            onClick={() => window.location.reload()}
-          >
-            Refresh Dashboard
-          </button>
-        </div>
-      </div>
+
     </div>
   );
 };

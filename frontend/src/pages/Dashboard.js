@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { sitesAPI } from '../services/api';
+import KibanaChart from '../components/KibanaChart';
 
 const Dashboard = () => {
   const [sites, setSites] = useState([]);
@@ -13,6 +14,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const response = await sitesAPI.getAll();
+      console.log('Sites data:', response.data);
       setSites(response.data);
     } catch (error) {
       console.error('Error loading sites:', error);
@@ -31,63 +33,79 @@ const Dashboard = () => {
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <h2>Dashboard</h2>
-        <p>Overview of your uptime monitoring</p>
+    <div className="dashboard">
+      <div className="dashboard-header">
+        <h2>Uptime Monitor Dashboard</h2>
+        <p>Real-time monitoring and analytics for all your sites</p>
         <small>Last updated: {new Date().toLocaleTimeString()}</small>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Total Sites</h3>
-          <div className="stat-value">{sites.length}</div>
-          <div className="stat-label">Monitored sites</div>
+      {/* Quick Stats Bar */}
+      <div className="stats-bar">
+        <div className="stat-item">
+          <span className="stat-label">Total Sites</span>
+          <span className="stat-value">{sites.length}</span>
         </div>
-        
-        <div className="stat-card">
-          <h3>Active Sites</h3>
-          <div className="stat-value">{sites.filter(site => site.isActive).length}</div>
-          <div className="stat-label">Currently monitoring</div>
+        <div className="stat-item">
+          <span className="stat-label">Active</span>
+          <span className="stat-value active">{sites.filter(site => site.isActive).length}</span>
         </div>
-        
-        <div className="stat-card">
-          <h3>Inactive Sites</h3>
-          <div className="stat-value">{sites.filter(site => !site.isActive).length}</div>
-          <div className="stat-label">Paused monitoring</div>
+        <div className="stat-item">
+          <span className="stat-label">Inactive</span>
+          <span className="stat-value inactive">{sites.filter(site => !site.isActive).length}</span>
         </div>
-        
-        <div className="stat-card">
-          <h3>Monitoring Status</h3>
-          <div className="stat-value">{sites.length > 0 ? 'Active' : 'No Sites'}</div>
-          <div className="stat-label">System status</div>
+        <div className="stat-item">
+          <span className="stat-label">Uptime</span>
+          <span className="stat-value uptime">
+            {sites.length > 0 ? Math.round((sites.filter(site => site.isActive).length / sites.length) * 100) : 0}%
+          </span>
         </div>
       </div>
 
-      <div className="card">
-        <h3>Site Status Overview</h3>
-        {sites.length === 0 ? (
-          <p>No sites configured yet. Add your first site to start monitoring!</p>
-        ) : (
-          <div className="sites-list">
-            {sites.map(site => (
-              <div key={site.id} className="site-item">
-                <div className="site-info">
-                  <h4>{site.name}</h4>
-                  <p>{site.url}</p>
-                  <small>Check interval: {Math.round(site.checkInterval / 1000)} seconds</small>
+      {/* Site Cards with Individual Charts */}
+      {sites.length === 0 ? (
+        <div className="empty-state">
+          <h3>No sites configured yet</h3>
+          <p>Add your first site to start monitoring uptime and performance!</p>
+          <a href="/sites" className="btn btn-primary">Add Your First Site</a>
+        </div>
+      ) : (
+        <div className="sites-dashboard-grid">
+          {sites.map(site => {
+            console.log('Rendering site:', site.name, 'with ID:', site.id);
+            return (
+              <div key={site.id} className="site-dashboard-card">
+                <div className="site-card-header">
+                  <div className="site-info">
+                    <h3>{site.name}</h3>
+                    <a href={site.url} target="_blank" rel="noopener noreferrer" className="site-url">
+                      {site.url}
+                    </a>
+                  </div>
+                  <div className="site-status-info">
+                    <span className={`status-badge ${site.isActive ? 'status-up' : 'status-down'}`}>
+                      {site.isActive ? 'Online' : 'Offline'}
+                    </span>
+                    <span className="check-interval">
+                      Every {Math.round(site.checkInterval / 1000)}s
+                    </span>
+                  </div>
                 </div>
-                <div className="site-status">
-                  <span className={`status-indicator ${site.isActive ? 'status-up' : 'status-down'}`}>
-                    {site.isActive ? '● Active' : '● Inactive'}
-                  </span>
+                
+                <div className="site-chart-container">
+                  <KibanaChart
+                    siteId={site.id}
+                    siteName={site.name}
+                    checkInterval={site.checkInterval}
+                    height={250}
+                    timeRange="24h"
+                  />
                 </div>
-              </div>
-            ))}
+            </div>
+                        );
+            })}
           </div>
-        )}
-      </div>
-
+      )}
     </div>
   );
 };
