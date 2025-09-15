@@ -114,10 +114,10 @@ const SimpleChart = ({
     <div style={{ background: 'white', padding: '16px', borderRadius: '8px' }}>
       <div style={{ marginBottom: '12px' }}>
         <h4 style={{ margin: '0 0 4px', color: '#374151', fontSize: '16px' }}>
-          {siteName} - Response Time Trend
+          {siteName} - Response Time Analytics
         </h4>
         <p style={{ margin: 0, color: '#6b7280', fontSize: '12px' }}>
-          Last {data.length} checks • Average: {data.length > 0 ? Math.round(data.reduce((sum, d) => sum + d.responseTime, 0) / data.length) : 0}ms
+          Real-time visualization • {data.length} data points • Avg: {data.length > 0 ? Math.round(data.reduce((sum, d) => sum + d.responseTime, 0) / data.length) : 0}ms
         </p>
       </div>
       

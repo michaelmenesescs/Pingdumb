@@ -3,8 +3,6 @@ import axios from 'axios';
 // Use empty base URL to let the proxy handle routing
 const API_BASE_URL = '';
 
-
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {

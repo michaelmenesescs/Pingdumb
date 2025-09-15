@@ -18,7 +18,7 @@ class UptimeMonitor {
     console.log('Starting uptime monitor service...');
     this.isRunning = true;
     await this.runChecks();
-    
+
     // Set up periodic checks
     this.checkInterval = setInterval(async () => {
       if (this.isRunning) {
@@ -38,10 +38,10 @@ class UptimeMonitor {
   async runChecks() {
     try {
       console.log(`Running uptime checks at ${new Date().toISOString()}`);
-      
+
       // Get all active sites
       const sites = await this.getActiveSites();
-      
+
       if (sites.length === 0) {
         console.log('No active sites to monitor');
         return;
@@ -86,7 +86,7 @@ class UptimeMonitor {
 
     try {
       console.log(`Checking ${site.name} (${site.url})`);
-      
+
       const response = await axios.get(site.url, {
         timeout: 30000, // 30 second timeout
         validateStatus: () => true, // Accept all status codes
@@ -102,7 +102,7 @@ class UptimeMonitor {
 
       statusCode = response.status;
       responseTime = Date.now() - startTime;
-      
+
       // Consider 2xx and 3xx status codes as "up"
       if (statusCode >= 200 && statusCode < 400) {
         status = 'up';
@@ -120,7 +120,7 @@ class UptimeMonitor {
 
     // Store check result in Elasticsearch
     await this.storeCheckResult(site, status, statusCode, responseTime, error);
-    
+
     console.log(`${site.name}: ${status} (${responseTime}ms)`);
   }
 

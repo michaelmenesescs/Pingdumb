@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { sitesAPI } from '../services/api';
 import KibanaChart from '../components/KibanaChart';
+import SimpleChart from '../components/SimpleChart';
 
 const Dashboard = () => {
   const [sites, setSites] = useState([]);
@@ -31,10 +32,15 @@ const Dashboard = () => {
     try {
       const statsPromises = sitesData.map(async (site) => {
         try {
-          const response = await fetch(`/api/checks/stats/${site.id}`);
+          console.log(`Loading stats for site: ${site.name} (ID: ${site.id})`);
+          const response = await fetch(`/api/checks/stats/${site.id}?days=1`); // Get last 24 hours
           if (response.ok) {
             const stats = await response.json();
+            console.log(`Stats loaded for ${site.name}:`, stats);
             return { siteId: site.id, stats };
+          } else {
+            const errorText = await response.text();
+            console.error(`Failed to load stats for site ${site.id}:`, response.status, errorText);
           }
         } catch (error) {
           console.error(`Error loading stats for site ${site.id}:`, error);
@@ -49,7 +55,7 @@ const Dashboard = () => {
       });
       
       setSiteStats(statsMap);
-      console.log('Site stats loaded:', statsMap);
+      console.log('All site stats loaded:', statsMap);
     } catch (error) {
       console.error('Error loading site stats:', error);
     }
@@ -122,20 +128,39 @@ const Dashboard = () => {
                     <span className="check-interval">
                       Every {Math.round(site.checkInterval / 1000)}s
                     </span>
-                    <span className="uptime-percentage">
-                      Uptime: {siteStats[site.id]?.uptimePercentage?.toFixed(1) || 0}%
+                    <span className={`uptime-percentage ${
+                      siteStats[site.id]?.uptimePercentage >= 99 ? 'uptime-excellent' :
+                      siteStats[site.id]?.uptimePercentage >= 95 ? 'uptime-good' :
+                      siteStats[site.id]?.uptimePercentage >= 90 ? 'uptime-warning' : 'uptime-poor'
+                    }`}>
+                      Uptime: {siteStats[site.id]?.uptimePercentage !== undefined ? 
+                        `${siteStats[site.id].uptimePercentage.toFixed(1)}%` : 
+                        'Loading...'}
                     </span>
                   </div>
                 </div>
                 
                 <div className="site-chart-container">
-                  <KibanaChart
-                    siteId={site.id}
-                    siteName={site.name}
-                    checkInterval={site.checkInterval}
-                    height={250}
-                    timeRange="24h"
-                  />
+                  {/* Dual visualization approach - Enterprise Kibana + Real-time React charts */}
+                  <div className="chart-grid">
+                    <div className="chart-section">
+                      <SimpleChart
+                        siteId={site.id}
+                        siteName={site.name}
+                        height={220}
+                        timeRange="24h"
+                      />
+                    </div>
+                    <div className="chart-section">
+                      <KibanaChart
+                        siteId={site.id}
+                        siteName={site.name}
+                        checkInterval={site.checkInterval}
+                        height={220}
+                        timeRange="24h"
+                      />
+                    </div>
+                  </div>
                 </div>
             </div>
                         );
